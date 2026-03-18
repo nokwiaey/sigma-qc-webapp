@@ -4,9 +4,7 @@
 
 ## 在线访问
 
-GitHub Pages: https://your-username.github.io/sigma-qc-webapp/
-
-> 请将 `your-username` 替换为您的 GitHub 用户名
+GitHub Pages: [https://nokwiaey.github.io/sigma-qc-webapp/](https://your-username.github.io/sigma-qc-webapp/)
 
 ## 项目简介
 
@@ -20,13 +18,13 @@ GitHub Pages: https://your-username.github.io/sigma-qc-webapp/
 
 ### 性能等级标准
 
-| 等级 | 西格玛值 | 说明 | 推荐质控规则 |
-|------|----------|------|--------------|
-| 世界一流 | σ ≥ 6 | 卓越性能 | 13S 单规则 |
-| 优秀 | 5 ≤ σ < 6 | 优秀性能 | 13S 单规则 |
-| 良好 | 4 ≤ σ < 5 | 良好性能 | 12.5S/13S 多规则 |
-| 临界 | 3 ≤ σ < 4 | 临界性能 | 12S/13S/22S 多规则 |
-| 问题 | σ < 3 | 需改进 | Westgard 完整多规则 |
+| 等级   | 西格玛值      | 说明   | 推荐质控规则          |
+| ---- | --------- | ---- | --------------- |
+| 世界一流 | σ ≥ 6     | 卓越性能 | 13S 单规则         |
+| 优秀   | 5 ≤ σ < 6 | 优秀性能 | 13S 单规则         |
+| 良好   | 4 ≤ σ < 5 | 良好性能 | 12.5S/13S 多规则   |
+| 临界   | 3 ≤ σ < 4 | 临界性能 | 12S/13S/22S 多规则 |
+| 问题   | σ < 3     | 需改进  | Westgard 完整多规则  |
 
 ## 使用说明
 
@@ -60,13 +58,13 @@ GitHub Pages: https://your-username.github.io/sigma-qc-webapp/
 
 导入的 Excel 文件需要包含以下列：
 
-| 列名 | 说明 | 必填 | 示例 |
-|------|------|------|------|
-| 项目名称 | 检验项目名称 | 是 | 血糖 |
-| 分析系统 | 使用的分析仪器/方法 | 否 | 生化分析仪A |
-| TEa% | 允许总误差(%) | 是 | 10.0 |
-| CV% | 变异系数(%) | 是 | 2.5 |
-| Bias% | 偏倚(%) | 是 | 1.5 |
+| 列名    | 说明         | 必填 | 示例     |
+| ----- | ---------- | -- | ------ |
+| 项目名称  | 检验项目名称     | 是  | 血糖     |
+| 分析系统  | 使用的分析仪器/方法 | 否  | 生化分析仪A |
+| TEa%  | 允许总误差(%)   | 是  | 10.0   |
+| CV%   | 变异系数(%)    | 是  | 2.5    |
+| Bias% | 偏倚(%)      | 是  | 1.5    |
 
 ### 模板示例
 
@@ -157,3 +155,4 @@ MIT License
 - [Westgard 多规则质控](https://www.westgard.com/)
 - [六西格玛质量管理](https://en.wikipedia.org/wiki/Six_Sigma)
 - [临床检验质量指标](https://www.ifcc.org/)
+
