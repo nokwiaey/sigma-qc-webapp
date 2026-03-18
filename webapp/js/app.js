@@ -10,7 +10,6 @@
  */
 class App {
     constructor() {
-        this.currentTab = 'projectData';
         this.editingProjectId = null;
         this.projects = [];
         this.filteredProjects = [];
@@ -37,14 +36,6 @@ class App {
      * 初始化事件监听器
      */
     initEventListeners() {
-        // 标签页切换
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                const tabId = e.target.closest('.nav-tab').dataset.tab;
-                this.switchTab(tabId);
-            });
-        });
-
         // 筛选功能
         const filterProjectName = document.getElementById('filterProjectName');
         const filterYear = document.getElementById('filterYear');
@@ -110,33 +101,6 @@ class App {
             cancelProjectBtn.addEventListener('click', () => this.closeProjectModal());
         }
 
-        // 图表筛选
-        const chartFilterProjectName = document.getElementById('chartFilterProjectName');
-        const chartFilterYear = document.getElementById('chartFilterYear');
-        const chartFilterGroup = document.getElementById('chartFilterGroup');
-        const chartFilterAnalyticalSystem = document.getElementById('chartFilterAnalyticalSystem');
-        const chartFilterPerformance = document.getElementById('chartFilterPerformance');
-        const resetChartFiltersBtn = document.getElementById('resetChartFilters');
-
-        if (chartFilterProjectName) {
-            chartFilterProjectName.addEventListener('input', () => this.applyChartFilters());
-        }
-        if (chartFilterYear) {
-            chartFilterYear.addEventListener('change', () => this.applyChartFilters());
-        }
-        if (chartFilterGroup) {
-            chartFilterGroup.addEventListener('change', () => this.applyChartFilters());
-        }
-        if (chartFilterAnalyticalSystem) {
-            chartFilterAnalyticalSystem.addEventListener('change', () => this.applyChartFilters());
-        }
-        if (chartFilterPerformance) {
-            chartFilterPerformance.addEventListener('change', () => this.applyChartFilters());
-        }
-        if (resetChartFiltersBtn) {
-            resetChartFiltersBtn.addEventListener('click', () => this.resetChartFilters());
-        }
-
         // 图表控制
         const refreshChartBtn = document.getElementById('refreshChart');
         if (refreshChartBtn) {
@@ -174,41 +138,6 @@ class App {
     }
 
     /**
-     * 切换标签页
-     * @param {string} tabId - 标签页 ID
-     */
-    switchTab(tabId) {
-        this.currentTab = tabId;
-
-        // 更新导航标签样式
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            if (tab.dataset.tab === tabId) {
-                tab.classList.add('active', 'border-blue-600', 'text-blue-600');
-                tab.classList.remove('border-transparent', 'text-gray-600');
-            } else {
-                tab.classList.remove('active', 'border-blue-600', 'text-blue-600');
-                tab.classList.add('border-transparent', 'text-gray-600');
-            }
-        });
-
-        // 显示对应内容
-        document.querySelectorAll('.tab-content').forEach(content => {
-            if (content.id === tabId) {
-                content.classList.remove('hidden');
-                content.classList.add('active');
-            } else {
-                content.classList.add('hidden');
-                content.classList.remove('active');
-            }
-        });
-
-        // 如果切换到性能验证图页，刷新图表
-        if (tabId === 'performanceChart' && sigmaChart) {
-            this.refreshChart();
-        }
-    }
-
-    /**
      * 加载项目数据
      */
     loadProjects() {
@@ -216,8 +145,8 @@ class App {
             this.projects = projectStorage.getAll();
             this.filteredProjects = [...this.projects];
             this.updateFilterOptions();
-            this.updateChartFilterOptions();
             this.renderProjects();
+            this.refreshChart();
         }
     }
 
@@ -256,7 +185,7 @@ class App {
     }
 
     /**
-     * 应用筛选
+     * 应用筛选（同时更新表格和图表）
      */
     applyFilters() {
         const filterProjectName = document.getElementById('filterProjectName');
@@ -293,6 +222,7 @@ class App {
         });
 
         this.renderProjects();
+        this.refreshChart();
     }
 
     /**
@@ -321,110 +251,7 @@ class App {
 
         this.filteredProjects = [...this.projects];
         this.renderProjects();
-    }
-
-    /**
-     * 应用图表筛选
-     */
-    applyChartFilters() {
-        const chartFilterProjectName = document.getElementById('chartFilterProjectName');
-        const chartFilterYear = document.getElementById('chartFilterYear');
-        const chartFilterGroup = document.getElementById('chartFilterGroup');
-        const chartFilterAnalyticalSystem = document.getElementById('chartFilterAnalyticalSystem');
-        const chartFilterPerformance = document.getElementById('chartFilterPerformance');
-        const chartTypeSelect = document.getElementById('chartType');
-
-        const chartFilters = {
-            projectName: chartFilterProjectName ? chartFilterProjectName.value.toLowerCase() : '',
-            year: chartFilterYear ? chartFilterYear.value : '',
-            group: chartFilterGroup ? chartFilterGroup.value : '',
-            analyticalSystem: chartFilterAnalyticalSystem ? chartFilterAnalyticalSystem.value : '',
-            performance: chartFilterPerformance ? chartFilterPerformance.value : ''
-        };
-
-        // 筛选项目
-        let filteredProjects = this.projects.filter(project => {
-            if (chartFilters.projectName && !project.projectName.toLowerCase().includes(chartFilters.projectName)) {
-                return false;
-            }
-            if (chartFilters.year && String(project.year) !== chartFilters.year) {
-                return false;
-            }
-            if (chartFilters.group && project.group !== chartFilters.group) {
-                return false;
-            }
-            if (chartFilters.analyticalSystem && project.analyticalSystem !== chartFilters.analyticalSystem) {
-                return false;
-            }
-            if (chartFilters.performance && project.performance !== chartFilters.performance) {
-                return false;
-            }
-            return true;
-        });
-
-        // 刷新图表（保持当前图表类型）
-        if (sigmaChart) {
-            const chartType = chartTypeSelect ? chartTypeSelect.value : 'verification';
-            sigmaChart.setProjects(filteredProjects);
-            sigmaChart.draw(chartType);
-        }
-    }
-
-    /**
-     * 重置图表筛选
-     */
-    resetChartFilters() {
-        const chartFilterProjectName = document.getElementById('chartFilterProjectName');
-        const chartFilterYear = document.getElementById('chartFilterYear');
-        const chartFilterGroup = document.getElementById('chartFilterGroup');
-        const chartFilterAnalyticalSystem = document.getElementById('chartFilterAnalyticalSystem');
-        const chartFilterPerformance = document.getElementById('chartFilterPerformance');
-
-        if (chartFilterProjectName) chartFilterProjectName.value = '';
-        if (chartFilterYear) chartFilterYear.value = '';
-        if (chartFilterGroup) chartFilterGroup.value = '';
-        if (chartFilterAnalyticalSystem) chartFilterAnalyticalSystem.value = '';
-        if (chartFilterPerformance) chartFilterPerformance.value = '';
-
-        // 刷新图表显示所有项目
-        if (sigmaChart) {
-            sigmaChart.setProjects(this.projects);
-            sigmaChart.draw();
-        }
-    }
-
-    /**
-     * 更新图表筛选选项
-     */
-    updateChartFilterOptions() {
-        const years = [...new Set(this.projects.map(p => p.year).filter(y => y))].sort((a, b) => b - a);
-        const groups = [...new Set(this.projects.map(p => p.group).filter(g => g))].sort();
-        const systems = [...new Set(this.projects.map(p => p.analyticalSystem).filter(s => s))].sort();
-
-        const chartFilterYear = document.getElementById('chartFilterYear');
-        const chartFilterGroup = document.getElementById('chartFilterGroup');
-        const chartFilterAnalyticalSystem = document.getElementById('chartFilterAnalyticalSystem');
-
-        if (chartFilterYear) {
-            const currentValue = chartFilterYear.value;
-            chartFilterYear.innerHTML = '<option value="">全部年份</option>' +
-                years.map(y => `<option value="${y}">${y}</option>`).join('');
-            chartFilterYear.value = currentValue;
-        }
-
-        if (chartFilterGroup) {
-            const currentValue = chartFilterGroup.value;
-            chartFilterGroup.innerHTML = '<option value="">全部分组</option>' +
-                groups.map(g => `<option value="${this.escapeHtml(g)}">${this.escapeHtml(g)}</option>`).join('');
-            chartFilterGroup.value = currentValue;
-        }
-
-        if (chartFilterAnalyticalSystem) {
-            const currentValue = chartFilterAnalyticalSystem.value;
-            chartFilterAnalyticalSystem.innerHTML = '<option value="">全部系统</option>' +
-                systems.map(s => `<option value="${this.escapeHtml(s)}">${this.escapeHtml(s)}</option>`).join('');
-            chartFilterAnalyticalSystem.value = currentValue;
-        }
+        this.refreshChart();
     }
 
     /**
@@ -442,7 +269,7 @@ class App {
         if (projectsToRender.length === 0) {
             tbody.innerHTML = '';
             if (emptyState) emptyState.classList.remove('hidden');
-            if (table) table.classList.remove('hidden');
+            if (table) table.classList.add('hidden');
             return;
         }
 
@@ -459,23 +286,23 @@ class App {
 
             return `
                 <tr class="hover:bg-gray-50">
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${index + 1}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm font-medium">${this.escapeHtml(project.projectName)}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${project.year || '-'}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${this.escapeHtml(project.group || '-')}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${this.escapeHtml(project.analyticalSystem || '-')}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${project.tea}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${project.cv}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${project.bias}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm font-semibold">${sigmaDisplay}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${index + 1}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm font-medium">${this.escapeHtml(project.projectName)}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${project.year || '-'}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${this.escapeHtml(project.group || '-')}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${this.escapeHtml(project.analyticalSystem || '-')}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${project.tea}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${project.cv}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${project.bias}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm font-semibold">${sigmaDisplay}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">
                         <span class="px-2 py-1 rounded text-xs font-medium" style="background-color: ${performanceColor.bg}; color: ${performanceColor.text}; border: 1px solid ${performanceColor.border};">
                             ${performanceName}
                         </span>
                     </td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${controlRuleDisplay}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">${batchLengthDisplay}</td>
-                    <td class="border border-gray-300 px-4 py-3 text-sm">
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${controlRuleDisplay}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">${batchLengthDisplay}</td>
+                    <td class="border border-gray-300 px-3 py-2 text-sm">
                         <div class="flex space-x-2">
                             <button onclick="app.editProject('${project.id}')" class="text-blue-600 hover:text-blue-800" title="编辑">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,12 +354,13 @@ class App {
     }
 
     /**
-     * 更新统计信息
+     * 更新统计信息（基于筛选后的数据）
      */
     updateStatistics() {
         if (typeof countPerformanceLevels !== 'function') return;
 
-        const counts = countPerformanceLevels(this.projects.map(p => new ProjectData(p)));
+        const projectsToCount = this.filteredProjects || this.projects;
+        const counts = countPerformanceLevels(projectsToCount.map(p => new ProjectData(p)));
 
         const worldClassCount = document.getElementById('worldClassCount');
         const excellentCount = document.getElementById('excellentCount');
@@ -567,7 +395,7 @@ class App {
                 modalTitle.textContent = '编辑项目';
                 projectIdInput.value = projectId;
                 document.getElementById('projectName').value = project.projectName;
-                document.getElementById('projectYear').value = project.year || '';
+                document.getElementById('projectYear').value = '';
                 document.getElementById('projectGroup').value = project.group || '';
                 document.getElementById('analyticalSystem').value = project.analyticalSystem || '';
                 document.getElementById('tea').value = project.tea;
@@ -662,7 +490,8 @@ class App {
         }
 
         this.closeProjectModal();
-        this.renderProjects();
+        this.updateFilterOptions();
+        this.applyFilters();
         this.showToast(projectId ? '项目更新成功' : '项目添加成功');
     }
 
@@ -689,7 +518,7 @@ class App {
             projectStorage.delete(projectId);
         }
 
-        this.renderProjects();
+        this.applyFilters();
         this.showToast('项目删除成功');
     }
 
@@ -712,7 +541,7 @@ class App {
             projectStorage.clear();
         }
 
-        this.renderProjects();
+        this.applyFilters();
         this.showToast('所有项目已清空');
     }
 
@@ -798,69 +627,9 @@ class App {
         const chartTypeSelect = document.getElementById('chartType');
         const chartType = chartTypeSelect ? chartTypeSelect.value : 'verification';
 
-        // 获取当前筛选后的项目
-        const chartFilterProjectName = document.getElementById('chartFilterProjectName');
-        const chartFilterYear = document.getElementById('chartFilterYear');
-        const chartFilterGroup = document.getElementById('chartFilterGroup');
-        const chartFilterAnalyticalSystem = document.getElementById('chartFilterAnalyticalSystem');
-        const chartFilterPerformance = document.getElementById('chartFilterPerformance');
-
-        const chartFilters = {
-            projectName: chartFilterProjectName ? chartFilterProjectName.value.toLowerCase() : '',
-            year: chartFilterYear ? chartFilterYear.value : '',
-            group: chartFilterGroup ? chartFilterGroup.value : '',
-            analyticalSystem: chartFilterAnalyticalSystem ? chartFilterAnalyticalSystem.value : '',
-            performance: chartFilterPerformance ? chartFilterPerformance.value : ''
-        };
-
-        // 应用筛选
-        let filteredProjects = this.projects.filter(project => {
-            if (chartFilters.projectName && !project.projectName.toLowerCase().includes(chartFilters.projectName)) {
-                return false;
-            }
-            if (chartFilters.year && String(project.year) !== chartFilters.year) {
-                return false;
-            }
-            if (chartFilters.group && project.group !== chartFilters.group) {
-                return false;
-            }
-            if (chartFilters.analyticalSystem && project.analyticalSystem !== chartFilters.analyticalSystem) {
-                return false;
-            }
-            if (chartFilters.performance && project.performance !== chartFilters.performance) {
-                return false;
-            }
-            return true;
-        });
-
-        sigmaChart.setProjects(filteredProjects);
+        // 使用当前筛选后的项目数据
+        sigmaChart.setProjects(this.filteredProjects);
         sigmaChart.draw(chartType);
-
-        // 更新统计卡片（基于筛选后的数据）
-        this.updateStatisticsForFiltered(filteredProjects);
-    }
-
-    /**
-     * 更新筛选后数据的统计信息
-     */
-    updateStatisticsForFiltered(filteredProjects) {
-        if (typeof countPerformanceLevels !== 'function') return;
-
-        const counts = countPerformanceLevels(filteredProjects.map(p => new ProjectData(p)));
-
-        const worldClassCount = document.getElementById('worldClassCount');
-        const excellentCount = document.getElementById('excellentCount');
-        const goodCount = document.getElementById('goodCount');
-        const marginalCount = document.getElementById('marginalCount');
-        const poorCount = document.getElementById('poorCount');
-        const unacceptableCount = document.getElementById('unacceptableCount');
-
-        if (worldClassCount) worldClassCount.textContent = counts[PerformanceLevel.WORLD_CLASS] || 0;
-        if (excellentCount) excellentCount.textContent = counts[PerformanceLevel.EXCELLENT] || 0;
-        if (goodCount) goodCount.textContent = counts[PerformanceLevel.GOOD] || 0;
-        if (marginalCount) marginalCount.textContent = counts[PerformanceLevel.MARGINAL] || 0;
-        if (poorCount) poorCount.textContent = counts[PerformanceLevel.POOR] || 0;
-        if (unacceptableCount) unacceptableCount.textContent = counts[PerformanceLevel.UNACCEPTABLE] || 0;
     }
 
     /**
