@@ -26,10 +26,39 @@ class App {
      * 初始化应用
      */
     init() {
-        this.loadProjects();
         this.initEventListeners();
         this.initChart();
         this.render();
+        // 延迟加载项目数据，确保图表模块完全初始化
+        this._loadProjectsWithRetry();
+    }
+
+    /**
+     * 带重试机制的项目数据加载
+     * @param {number} maxRetries - 最大重试次数
+     * @param {number} retryDelay - 重试延迟（毫秒）
+     */
+    _loadProjectsWithRetry(maxRetries = 10, retryDelay = 100) {
+        let retries = 0;
+
+        const tryLoad = () => {
+            // 检查图表模块是否已初始化
+            if (typeof sigmaChart !== 'undefined' && sigmaChart !== null) {
+                this.loadProjects();
+                return;
+            }
+
+            retries++;
+            if (retries < maxRetries) {
+                setTimeout(tryLoad, retryDelay);
+            } else {
+                // 超过最大重试次数，仍然尝试加载
+                console.warn('图表模块初始化超时，尝试继续加载数据');
+                this.loadProjects();
+            }
+        };
+
+        tryLoad();
     }
 
     /**
@@ -146,7 +175,8 @@ class App {
             this.filteredProjects = [...this.projects];
             this.updateFilterOptions();
             this.renderProjects();
-            this.refreshChart();
+            // 使用静默模式刷新图表，避免在初始化时显示错误提示
+            this.refreshChart(true);
         }
     }
 
@@ -617,10 +647,13 @@ class App {
 
     /**
      * 刷新图表
+     * @param {boolean} silent - 是否静默模式（不显示错误提示）
      */
-    refreshChart() {
+    refreshChart(silent = false) {
         if (!sigmaChart) {
-            this.showToast('图表模块未加载', 'error');
+            if (!silent) {
+                this.showToast('图表模块未加载', 'error');
+            }
             return;
         }
 
