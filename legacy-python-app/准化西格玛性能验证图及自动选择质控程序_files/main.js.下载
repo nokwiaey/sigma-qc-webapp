@@ -1,0 +1,164 @@
+function MyAdd()
+{
+  var ItemName=$("#ItemName").val();
+  var Tea=$("#Tea").val();
+  var CV=$("#CV").val();
+  var Bias=$("#Bias").val();
+  
+  var reg=/^[-\+]?\d+(\.\d+)?$/;
+  
+  
+  if(ItemName=="")
+  {
+     alert("项目名称不能为空");
+	 return;
+  }
+  if(reg.test(Tea)==false)
+  {
+     alert("允许总误差是必填项，且只能填写数字");
+	 return;
+  }
+  if(reg.test(CV)==false)
+  {
+     alert("不精密度是必填项，且只能填写数字");
+	 return;
+  }
+  if(reg.test(Bias)==false)
+  {
+     alert("偏倚是必填项，且只能填写数字");
+	 return;
+  }
+  
+  Tea=parseFloat(Tea);
+  CV=parseFloat(CV);
+  Bias=parseFloat(Bias);
+  
+  if(Tea<=0)
+  {
+     alert("允许总误差必须大于0");
+	 return;
+  }
+  if(CV<=0)
+  {
+     alert("不精密度必须大于0");
+	 return;
+  }
+  if(Bias<0)
+  {
+     alert("偏倚必须大于或等于0");
+	 return;
+  }
+  
+  Add(ItemName,Tea,CV,Bias);
+}
+
+function MyDel(obj)
+{
+  var id=$(obj).parent().parent().attr("id");
+  Del(id);
+}
+
+//---------------------
+
+function Add(ItemName,Tea,CV,Bias)
+{
+   $.ajax({"url":"AjaxService.ashx","type":"POST","cache":false,"data":{"type":"add","ItemName":ItemName,"Tea":Tea,"CV":CV,"Bias":Bias}, "success":FSuccess,"error":FError});
+   
+}
+
+function FSuccess(str)
+{
+   if(str!="error")
+   {
+	   //console.log(str);
+	   //str = str.replace(/'/g, "\\'");
+	   //console.log(str);
+		var arr=eval("("+str+")");
+		
+		$("#table0 tr:gt(0)").remove();
+		
+		for(var i=0;i<arr.length;i++)
+		{
+			var tr=$("<tr id='"+arr[i]["id"]+"'></tr>");
+			tr.append("<td>"+arr[i]["ItemName"]+"</td>");
+			tr.append("<td>"+arr[i]["Tea"]+"</td>");
+			tr.append("<td>"+arr[i]["CV"]+"</td>");
+			tr.append("<td>"+arr[i]["Bias"]+"</td>");
+            tr.append("<td>" + arr[i]["Sigma"] + "</td>");
+            if (v == "2") {
+                tr.append("<td>" + arr[i]["Performance"] + "</td>");
+            } else {
+                tr.append("<td style='background-color:" + GetScatterColor(arr[i]["Performance"]) + "'>" + arr[i]["Performance"] + "</td>");
+            }
+			
+			tr.append("<td>" + GetGuize(arr[i]["Performance"]) + "</td>")
+			tr.append("<td><input type='button' value='删除' class='button' onclick='MyDel(this);' /></td>");
+			
+			$("#table0").append(tr);
+		}
+
+        display_chart({ "container": "mychart" });
+        display_chart_and_zhushi({ "container": "mychart_and_zhushi" });
+        display_chart_p_len({ "container": "mychart_p_len" });
+   }
+   else
+   {
+	  alert("操作失败");   
+   }
+	   
+}
+
+function FError(str)
+{
+   alert("操作失败"); 
+}
+
+function Del(id)
+{
+   	$.ajax({"url":"AjaxService.ashx","type":"POST","cache":false,"data":{"type":"del","id":id},"success":FSuccess,"error":FError});
+}
+
+function Load()
+{
+	$.ajax({"url":"AjaxService.ashx","type":"Get","cache":false,"data":{"type":"list"},"success":FSuccess,"error":FError});
+}
+
+function GetPrinterUrl(){
+	return "http://srv.clinet.cn/printpdf/printpdffromwebpage.ashx";
+}
+
+function PrintPdf(labindex) {
+	if ($("#table0 tr").size()>1) {
+		var LocationUrl = location.href;
+		var locationDir = LocationUrl.substring(0, LocationUrl.lastIndexOf("/") + 1);
+        var AbsPath = locationDir + "pdf.aspx?labindex=" + labindex;
+        if (v == "2") {
+            AbsPath = AbsPath + "&v=2";
+        }
+		var PrinterUrl = GetPrinterUrl();
+		var date=new Date();
+		var p = date.getFullYear() % date.getDate();
+		$("#download").html("&nbsp;正在打印...");
+		$.ajax({ "url": PrinterUrl,
+			 "dataType": "jsonp",
+			 "jsonp": "callback",
+			 "jsonpCallback":"CallbackFun",
+			 "cache": false,
+			 "data":{ "webpage": AbsPath,"delay":"2500","p":p+"","app":"xgmpv","u":labindex}
+		  });
+		
+	} else {
+	   alert("您没有添加任何数据，不能进行打印");
+	}
+}
+
+function CallbackFun(json) {
+	if (json["FileName"] != "") {
+		var PrinterUrl = GetPrinterUrl();
+		PrinterUrl = PrinterUrl.substring(0, PrinterUrl.lastIndexOf("/") + 1);
+		$("#download").html('<a href="' + PrinterUrl + 'file/xgmpv/' + json["FileName"] + '" target="_blank">&nbsp;点击下载</a>');
+	} else {
+		$("#download").html("打印失败" + str.responseText);
+	}
+}
+
