@@ -4,7 +4,7 @@
 
 ## 在线访问
 
-GitHub Pages: [https://nokwiaey.github.io/sigma-qc-webapp/](https://your-username.github.io/sigma-qc-webapp/)
+GitHub Pages: [https://nokwiaey.github.io/sigma-qc-webapp/](https://nokwiaey.github.io/sigma-qc-webapp/)
 
 ## 项目简介
 
